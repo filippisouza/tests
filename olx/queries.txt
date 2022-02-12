@@ -1,0 +1,31 @@
+SELECT
+	portal,
+	SUM(leads) AS leads
+FROM
+	tb_listings AS tb_list
+INNER JOIN
+	tb_leads
+	ON
+    	tb_list.listing_id = tb_leads.listing_id
+GROUP BY
+	portal
+ORDER BY 
+	leads DESC;
+
+WITH n1 AS (
+  SELECT 
+	  DISTINCT ON(city, neighborhood) city, neighborhood,
+    COUNT(listing_id) OVER (PARTITION BY city,neighborhood) AS city_total,
+  	COUNT(listing_id) OVER (PARTITION BY city)AS neighborhood_total
+  FROM 
+    tb_listings
+  ) 
+
+  SELECT 
+    *,
+    ROUND(
+      ((city_total/neighborhood_total::float)*100)
+      ::numeric,2
+      )::text || '%' AS percentage
+  FROM 
+    n1
